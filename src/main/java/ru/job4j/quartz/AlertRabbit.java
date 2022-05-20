@@ -23,7 +23,10 @@ public class AlertRabbit {
     private static final String QUERY_INSERT_CREATED_DATE = "insert into rabbit (created_date) values (?)";
 
     public static void main(String[] args) {
-        try (Connection connection = getConnection()) {
+        try (InputStream resource = AlertRabbit.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+            Properties properties = new Properties();
+            properties.load(resource);
+            Connection connection = getConnection(properties);
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
             JobDataMap jobDataMap = new JobDataMap();
@@ -32,7 +35,7 @@ public class AlertRabbit {
                     .usingJobData(jobDataMap)
                     .build();
             SimpleScheduleBuilder times = simpleSchedule()
-                    .withIntervalInSeconds(Integer.parseInt(getProperty(PROPERTY_SCHEDULE_TIME_INTERVAL_IN_SECONDS)))
+                    .withIntervalInSeconds(Integer.parseInt(properties.getProperty(PROPERTY_SCHEDULE_TIME_INTERVAL_IN_SECONDS)))
                     .repeatForever();
             Trigger trigger = newTrigger()
                     .startNow()
@@ -62,24 +65,14 @@ public class AlertRabbit {
         }
     }
 
-    private static String getProperty(String keyOfProperty) {
-        Properties properties = new Properties();
-        try (InputStream resource = AlertRabbit.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
-            properties.load(resource);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return properties.getProperty(keyOfProperty);
-    }
-
-    private static Connection getConnection() {
+    private static Connection getConnection(Properties properties) {
         Connection connection = null;
         try {
-            Class.forName(getProperty(PROPERTY_DB_DRIVER_CLASS_NAME));
+            Class.forName(properties.getProperty(PROPERTY_DB_DRIVER_CLASS_NAME));
             connection = DriverManager.getConnection(
-                    getProperty(PROPERTY_DB_URL),
-                    getProperty(PROPERTY_DB_USERNAME),
-                    getProperty(PROPERTY_DB_PASSWORD)
+                    properties.getProperty(PROPERTY_DB_URL),
+                    properties.getProperty(PROPERTY_DB_USERNAME),
+                    properties.getProperty(PROPERTY_DB_PASSWORD)
             );
         } catch (Exception e) {
             e.printStackTrace();
