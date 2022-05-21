@@ -3,6 +3,7 @@ package ru.job4j.quartz;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -23,10 +24,8 @@ public class AlertRabbit {
     private static final String QUERY_INSERT_CREATED_DATE = "insert into rabbit (created_date) values (?)";
 
     public static void main(String[] args) {
-        try (InputStream resource = AlertRabbit.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
-            Properties properties = new Properties();
-            properties.load(resource);
-            Connection connection = getConnection(properties);
+        Properties properties = loadProperties();
+        try (Connection connection = getConnection(properties)) {
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
             JobDataMap jobDataMap = new JobDataMap();
@@ -65,18 +64,23 @@ public class AlertRabbit {
         }
     }
 
-    private static Connection getConnection(Properties properties) {
-        Connection connection = null;
-        try {
-            Class.forName(properties.getProperty(PROPERTY_DB_DRIVER_CLASS_NAME));
-            connection = DriverManager.getConnection(
-                    properties.getProperty(PROPERTY_DB_URL),
-                    properties.getProperty(PROPERTY_DB_USERNAME),
-                    properties.getProperty(PROPERTY_DB_PASSWORD)
-            );
+    private static Connection getConnection(Properties properties) throws Exception {
+        Class.forName(properties.getProperty(PROPERTY_DB_DRIVER_CLASS_NAME));
+        return DriverManager.getConnection(
+                properties.getProperty(PROPERTY_DB_URL),
+                properties.getProperty(PROPERTY_DB_USERNAME),
+                properties.getProperty(PROPERTY_DB_PASSWORD)
+        );
+    }
+
+    private static Properties loadProperties() {
+        Properties properties = null;
+        try (InputStream resource = AlertRabbit.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+            properties = new Properties();
+            properties.load(resource);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return connection;
+        return properties;
     }
 }
