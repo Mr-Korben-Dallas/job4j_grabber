@@ -5,13 +5,17 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import ru.job4j.grabber.entity.Post;
+import ru.job4j.grabber.utils.DateTimeParser;
+import ru.job4j.grabber.utils.HarbCareerDateTimeParser;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.io.IOException;
-
-public class HabrCareerParse {
+public class HabrCareerParse implements Parse {
     private static final String SOURCE_LINK = "https://career.habr.com";
     private static final String PAGE_LINK = String.format("%s/vacancies/java_developer", SOURCE_LINK);
-    private static final String NEXT_PAGE_LINK = String.format("%s?page=", PAGE_LINK);
+    private static final String PAGE_LINK_NEXT = String.format("%s?page=", PAGE_LINK);
     private static final String VACANCY_CARD_ELEMENT_MAIN = ".vacancy-card__inner";
     private static final String VACANCY_CARD_ELEMENT_TITLE = ".vacancy-card__title";
     private static final String VACANCY_CARD_ELEMENT_TITLE_ATTR_HREF = "href";
@@ -19,29 +23,55 @@ public class HabrCareerParse {
     private static final String VACANCY_CARD_ELEMENT_DATE_ATTR_DATETIME = "datetime";
     private static final String VACANCY_CARD_DESCRIPTION = ".job_show_description__vacancy_description";
     private static final int NUMBER_OF_PAGES_TO_PARSE = 5;
+    private final DateTimeParser dateTimeParser;
+    private List<Post> listOfPosts = new ArrayList<>();
 
-    public static void main(String[] args) {
-        for (int i = 1; i <= NUMBER_OF_PAGES_TO_PARSE; i++) {
-            parse(i);
-        }
+    public HabrCareerParse(DateTimeParser dateTimeParser) {
+        this.dateTimeParser = dateTimeParser;
     }
 
-    private static void parse(int pageNumber) {
-        Document document = getPageDocument(NEXT_PAGE_LINK + pageNumber);
+    public static void main(String[] args) {
+        DateTimeParser dateTimeParser = new HarbCareerDateTimeParser();
+        HabrCareerParse habrCareerParser = new HabrCareerParse(dateTimeParser);
+        habrCareerParser.list(PAGE_LINK_NEXT);
+    }
+
+    @Override
+    public List<Post> list(String link) {
+        for (int pageNumber = 1; pageNumber <= NUMBER_OF_PAGES_TO_PARSE; pageNumber++) {
+            parse(link, pageNumber);
+        }
+        return listOfPosts;
+    }
+
+    private void parse(String url, int pageNumber) {
+        Document document = getPageDocument(PAGE_LINK_NEXT + pageNumber);
         Elements rows = document.select(VACANCY_CARD_ELEMENT_MAIN);
         rows.forEach(row -> {
-            Element titleElement = row.select(VACANCY_CARD_ELEMENT_TITLE).first();
-            Element linkElement = titleElement.child(0);
-            Element dateTimeElement = row.select(VACANCY_CARD_ELEMENT_DATE).first();
-            Element timeElement = dateTimeElement.child(0);
-            String dateTimeValue = timeElement.attr(VACANCY_CARD_ELEMENT_DATE_ATTR_DATETIME);
-            String vacancyName = titleElement.text();
-            String link = String.format("%s%s", SOURCE_LINK, linkElement.attr(VACANCY_CARD_ELEMENT_TITLE_ATTR_HREF));
-            System.out.printf("%s %s %s%n", dateTimeValue, vacancyName, link);
+            extractVacancyDetailsToPostList(row);
         });
     }
 
-    private static Document getPageDocument(String url) {
+    private void extractVacancyDetailsToPostList(Element row) {
+        Element titleElement = row.select(VACANCY_CARD_ELEMENT_TITLE).first();
+        Element linkElement = titleElement.child(0);
+        Element dateTimeElement = row.select(VACANCY_CARD_ELEMENT_DATE).first();
+        Element timeElement = dateTimeElement.child(0);
+        String dateTimeValue = timeElement.attr(VACANCY_CARD_ELEMENT_DATE_ATTR_DATETIME);
+        String vacancyTitle = titleElement.text();
+        String vacancyLink = SOURCE_LINK + linkElement.attr(VACANCY_CARD_ELEMENT_TITLE_ATTR_HREF);
+        String vacancyDescription = retrieveDescription(vacancyLink);
+        LocalDateTime vacancyPostedAt = new HarbCareerDateTimeParser().parse(dateTimeValue);
+        Post post = new Post(
+                vacancyTitle,
+                vacancyLink,
+                vacancyDescription,
+                vacancyPostedAt
+        );
+        listOfPosts.add(post);
+    }
+
+    private Document getPageDocument(String url) {
         Document document = null;
         try {
             Connection connection = Jsoup.connect(url);
@@ -52,8 +82,8 @@ public class HabrCareerParse {
         return document;
     }
 
-    private static String retrieveDescription(String url) {
-        Document document = getPageDocument(url);
+    private String retrieveDescription(String link) {
+        Document document = getPageDocument(link);
         return document.select(VACANCY_CARD_DESCRIPTION).text();
     }
 }
