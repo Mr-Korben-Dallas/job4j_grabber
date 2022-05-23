@@ -22,7 +22,7 @@ public class HabrCareerParse implements Parse {
     private static final String VACANCY_CARD_ELEMENT_DATE = ".vacancy-card__date";
     private static final String VACANCY_CARD_ELEMENT_DATE_ATTR_DATETIME = "datetime";
     private static final String VACANCY_CARD_DESCRIPTION = ".job_show_description__vacancy_description";
-    private static final int NUMBER_OF_PAGES_TO_PARSE = 5;
+    private static final int NUMBER_OF_PAGES_TO_PARSE = 1;
     private final DateTimeParser dateTimeParser;
     private List<Post> listOfPosts = new ArrayList<>();
 
@@ -61,7 +61,7 @@ public class HabrCareerParse implements Parse {
         String vacancyTitle = titleElement.text();
         String vacancyLink = SOURCE_LINK + linkElement.attr(VACANCY_CARD_ELEMENT_TITLE_ATTR_HREF);
         String vacancyDescription = retrieveDescription(vacancyLink);
-        LocalDateTime vacancyPostedAt = new HarbCareerDateTimeParser().parse(dateTimeValue);
+        LocalDateTime vacancyPostedAt = dateTimeParser.parse(dateTimeValue);
         Post post = new Post(
                 vacancyTitle,
                 vacancyLink,
