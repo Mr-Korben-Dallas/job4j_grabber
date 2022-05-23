@@ -2,7 +2,7 @@ package ru.job4j.grabber;
 
 import ru.job4j.grabber.entity.Post;
 import ru.job4j.grabber.utils.DateTimeParser;
-import ru.job4j.grabber.utils.HarbCareerDateTimeParser;
+import ru.job4j.grabber.utils.HabrCareerDateTimeParser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +21,7 @@ public class ExecuteHabrCareerParse {
             e.printStackTrace();
         }
         PsqlStore store = new PsqlStore(properties);
-        DateTimeParser dateTimeParser = new HarbCareerDateTimeParser();
+        DateTimeParser dateTimeParser = new HabrCareerDateTimeParser();
         HabrCareerParse habrCareerParse = new HabrCareerParse(dateTimeParser);
         List<Post> listOfPosts = habrCareerParse.list(LINK);
         listOfPosts.forEach(store::save);
