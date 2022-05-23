@@ -8,21 +8,21 @@ public class Post {
     private String title;
     private String link;
     private String description;
-    private LocalDateTime posted_at;
+    private LocalDateTime postedAt;
 
-    public Post(String title, String link, String description, LocalDateTime posted_at) {
+    public Post(String title, String link, String description, LocalDateTime postedAt) {
         this.title = title;
         this.link = link;
         this.description = description;
-        this.posted_at = posted_at;
+        this.postedAt = postedAt;
     }
 
-    public Post(int id, String title, String link, String description, LocalDateTime posted_at) {
+    public Post(int id, String title, String link, String description, LocalDateTime postedAt) {
         this.id = id;
         this.title = title;
         this.link = link;
         this.description = description;
-        this.posted_at = posted_at;
+        this.postedAt = postedAt;
     }
 
     public int getId() {
@@ -58,11 +58,11 @@ public class Post {
     }
 
     public LocalDateTime getPostedAt() {
-        return posted_at;
+        return postedAt;
     }
 
-    public void setPostedAt(LocalDateTime posted_at) {
-        this.posted_at = posted_at;
+    public void setPostedAt(LocalDateTime postedAt) {
+        this.postedAt = postedAt;
     }
 
     @Override
@@ -96,8 +96,8 @@ public class Post {
                 + ", description='"
                 + description
                 + '\''
-                + ", posted_at="
-                + posted_at
+                + ", postedAt="
+                + postedAt
                 + '}';
     }
 }
