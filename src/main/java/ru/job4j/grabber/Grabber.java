@@ -9,7 +9,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import static org.quartz.JobBuilder.newJob;
@@ -61,8 +61,9 @@ public class Grabber implements Grab {
             Store store = (Store) map.get("store");
             Parse parse = (Parse) map.get("parse");
             Properties cfg = (Properties) map.get("cfg");
-            List<Post> listOfPosts = parse.list(cfg.getProperty("link"));
-            listOfPosts.forEach(store::save);
+            for (Post post : new ArrayList<>(parse.list(cfg.getProperty("link")))) {
+                store.save(post);
+            }
         }
     }
 

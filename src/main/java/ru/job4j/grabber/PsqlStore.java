@@ -12,7 +12,7 @@ public class PsqlStore implements Store, AutoCloseable {
     private static final String PROPERTY_DB_USERNAME = "username";
     private static final String PROPERTY_DB_PASSWORD = "password";
     private static final String PROPERTY_DB_JDBC_DRIVER = "jdbc.driver";
-    private static final String TABLE_POSTS_QUERY_CREATE = "insert into posts (title, description, link, posted_at) values (?, ?, ?, ?);";
+    private static final String TABLE_POSTS_QUERY_CREATE = "insert into posts (title, description, link, posted_at) values (?, ?, ?, ?) ON CONFLICT (link) DO NOTHING;";
     private static final String TABLE_POSTS_QUERY_SELECT_ALL = "select * from posts;";
     private static final String TABLE_POSTS_QUERY_SELECT_BY_ID = "select * from posts where id = ?;";
     private static final String TABLE_POSTS_FIELD_ID = "id";
@@ -68,11 +68,11 @@ public class PsqlStore implements Store, AutoCloseable {
         Post post = null;
         try (PreparedStatement preparedStatement = connection.prepareStatement(TABLE_POSTS_QUERY_SELECT_BY_ID)) {
             preparedStatement.setInt(1, id);
-        try (ResultSet resultSet = preparedStatement.executeQuery()) {
-            if (resultSet.next()) {
-                post = getPostFromResultSet(resultSet);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    post = getPostFromResultSet(resultSet);
+                }
             }
-        }
         } catch (Exception e) {
             e.printStackTrace();
         }
