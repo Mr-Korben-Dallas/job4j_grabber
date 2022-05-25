@@ -6,6 +6,7 @@ import ru.job4j.grabber.utils.HabrCareerDateTimeParser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -15,19 +16,24 @@ public class ExecuteHabrCareerParse {
     public static void main(String[] args) {
         Properties properties = new Properties();
         try (InputStream in = PsqlStore.class.getClassLoader()
-                .getResourceAsStream("psqlstore.properties")) {
+                .getResourceAsStream("psqlstore.properties")
+        ) {
             properties.load(in);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        PsqlStore store = new PsqlStore(properties);
-        DateTimeParser dateTimeParser = new HabrCareerDateTimeParser();
-        HabrCareerParse habrCareerParse = new HabrCareerParse(dateTimeParser);
-        List<Post> listOfPosts = habrCareerParse.list(LINK);
-        listOfPosts.forEach(store::save);
-        List<Post> posts = store.getAll();
-        posts.forEach(System.out::println);
-        Post post = store.findById(12);
-        System.out.println(post);
+        try (PsqlStore store = new PsqlStore(properties)) {
+            DateTimeParser dateTimeParser = new HabrCareerDateTimeParser();
+            HabrCareerParse habrCareerParse = new HabrCareerParse(dateTimeParser);
+            for (Post post : new ArrayList<>(habrCareerParse.list(LINK))) {
+                store.save(post);
+            }
+            List<Post> posts = store.getAll();
+            posts.forEach(System.out::println);
+            Post post = store.findById(12);
+            System.out.println(post);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
